@@ -1,0 +1,119 @@
+# DevVoice OS
+
+DevVoice OS is a voice-first developer assistant built for real-time command execution, debugging support, and spoken responses. It lets developers operate parts of their local environment using natural language, with the browser handling microphone capture and the backend coordinating intent detection, system execution, memory, debugging, Git automation, and Murf Falcon text-to-speech.
+
+## Problem Statement
+
+Developers routinely context-switch between code, terminal, browser, and documentation while troubleshooting or executing repetitive actions. DevVoice OS reduces friction by making voice the primary interface for common system and development workflows, especially in demos, pair-programming scenarios, accessibility use cases, and rapid hackathon builds.
+
+## Architecture Diagram
+
+```text
++---------------------+        +------------------------+        +----------------------+
+| React Frontend      |        | Express API            |        | Local System         |
+| - Web Speech API    | -----> | - Assistant controller | -----> | - OS commands        |
+| - Status panels     |        | - Intent classifier    |        | - Terminal commands  |
+| - Audio playback    | <----- | - Memory + debug logic | <----- | - Git operations     |
++---------------------+        | - Murf Falcon service  |        +----------------------+
+                               +-----------+------------+
+                                           |
+                                           v
+                                +------------------------+
+                                | Murf Falcon TTS API    |
+                                | /v1/speech/stream      |
+                                +------------------------+
+```
+
+## Feature List
+
+- Voice input using the browser Web Speech API
+- Live transcript and listening indicator
+- Intent classification for OS control, terminal execution, debugging, explanation, and Git workflows
+- OS command execution for apps, terminal, and folders
+- Terminal command execution with stdout and stderr capture
+- Error analysis engine for common Python and JavaScript failures
+- Conversation memory for the last five interactions, including follow-up handling like "explain it"
+- Git voice assistant for init, commit, branch, push, and branch inspection
+- Murf Falcon voice responses with browser playback
+- Developer-focused dark UI with status indicators and command history
+
+## Project Structure
+
+```text
+devvoice-os/
+├── frontend/
+├── backend/
+├── .env.example
+├── README.md
+└── package.json
+```
+
+## Installation Steps
+
+1. Install dependencies.
+
+```bash
+npm run install:all
+```
+
+2. Copy the environment template.
+
+```bash
+cp .env.example .env
+```
+
+3. Set your Murf API key and preferred defaults in `.env`.
+
+4. Start both apps.
+
+```bash
+npm run dev
+```
+
+Frontend runs on `http://localhost:5173` and backend runs on `http://localhost:4000`.
+
+## Environment Variables
+
+| Variable | Description |
+| --- | --- |
+| `PORT` | Backend API port |
+| `CLIENT_URL` | Frontend origin for CORS |
+| `MURF_API_KEY` | Murf API key |
+| `MURF_VOICE_ID` | Default Falcon voice |
+| `MURF_LOCALE` | Voice locale |
+| `MURF_REGION` | Murf region slug such as `global`, `us-east`, `in` |
+| `DEFAULT_WORKSPACE_PATH` | Safe default working directory for terminal and Git operations |
+
+## Demo Instructions
+
+1. Click the microphone button and say `Open Visual Studio Code`.
+2. DevVoice OS classifies the request as an OS control action, opens VS Code, and speaks the confirmation.
+3. Say `Run my Python file`.
+4. The terminal module attempts execution and returns output or error text.
+5. Say `Explain this error`.
+6. The memory service resolves `this error` to the last failing output and the debug engine explains the issue in plain language.
+7. Say `Commit changes with message fixed import issue`.
+8. The Git service runs a commit and the assistant reports the result aloud.
+
+## Production Notes
+
+- The backend uses a service-per-domain structure so command execution, debugging, memory, and TTS can scale independently.
+- Murf audio generation is optional at runtime. If the API key is missing, text responses still work.
+- Command execution is intentionally constrained to supported voice workflows and explicit commands rather than arbitrary shell passthrough from the browser.
+- Memory is currently in-memory for demo speed; replacing it with Redis or a database is straightforward.
+
+## Future Improvements
+
+- Streaming audio playback over WebSockets for lower Murf response latency
+- LLM-based intent parsing and richer debugging explanations
+- IDE integrations for file-aware commands and code selection context
+- Persistent user profiles, command permissions, and audit logs
+- Multi-platform command adapters for macOS and Linux
+- Test coverage for command parsing, service orchestration, and frontend interaction states
+
+## Murf Integration Reference
+
+The TTS integration targets Murf Falcon’s streaming endpoint and request fields based on the official docs:
+
+- https://murf.ai/api/docs/text-to-speech-models/falcon
+- https://murf.ai/api/docs/api-reference/text-to-speech/stream
